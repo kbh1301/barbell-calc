@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Barbell Calculator</title>
+</head>
+<body>
+    <div class="bb-calc">
+        <div class="top-row">
+            <div class="visual-component">
+                <div class="flex-cell">
+                    <img src="img/barbell_shaft.png"  class="barbell-img"/>
+                </div>
+
+                <div class="flex-cell" id="bb-sleeve">
+                </div>
+            </div>
+        
+            <div class="list-component">
+                <table id="list-table">
+                    <thead>
+                        <tr>
+                            <th>PER SIDE:</th>
+                        </tr>
+                    </thead>
+                    <tbody id="list-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    
+        <input id="metric-input" type="checkbox" oninput="metricConversion(event.target.checked); setInput()">
+        <div class="input-component">
+            <form>
+                <input
+                    id="input"
+                    min="45"
+                    max="1500"
+                    value="202.5"
+                    oninput="validateInput(); setInput()"
+                >
+                <label for="input">Weight</label>
+            </form>
+            <label for="metric-input" class="metric-toggle">
+                <span class="toggle-handler"/>
+            </label>
+        </div>
+    </div>
+
+    <script>
+        const input = document.getElementById("input");
+
+        // calculate optimal plates based on user input
+        const calcWeight = (input, metric) => {
+            // if metric, return kg array; else, return lb array
+            const plates = metric ? [ 20, 15, 10, 5, 2.5, 1.25, 0.5 ] : [ 45, 35, 25, 10, 5, 2.5, 1.25 ];
+
+            // sort plates array highest to lowest
+            plates.sort((a,b) => b - a);
+
+            let inputArray = [];
+
+            // tracks remaining weight throughout calculation
+            let curWeight = input;
+
+            metric ? curWeight -= 20 : curWeight -= 45; // subtract standard bar weight
+            curWeight /= 2; // get one side of bar
+
+            // iterates through plates array, adding plates to inputArray if within curWeight
+            plates.forEach((plate, i) => {
+                // checks how many times plate fits evenly within curWeight
+                let wholePlate = curWeight / plate;
+                // calculate plate image size based on amount of available plates in array
+                let plateSize = 100 - i/(plates.length - 1) * 75;
+
+                // determines how many (if any) of the current plate can be used and adds component to result
+                if(wholePlate >= 1) {
+                    for(let i = wholePlate; i >= 1; i--) {
+                        // add plate object to inputArray
+                        inputArray.push({
+                            plateWeight: plate,
+                            plateSize: plateSize
+                        });
+                        // reduce curWeight by this plate's value
+                        curWeight -= plate;
+                    };
+                };
+            });
+            return inputArray;
+        }
+
+        const renderSleeve = () => {
+            const sleeve = document.createElement("img");
+            sleeve.className="barbell-img";
+            sleeve.id="sleeve";
+
+            document.getElementsByClassName("flex-cell-plates").length ? sleeve.src="img/barbell_sleeveCut.png" : sleeve.src="img/barbell_sleeve.png";
+            document.getElementById("bb-sleeve").appendChild(sleeve);
+        }
+
+        // renders a single plate img with a specified height contained within a flex-cell-plate div
+        const renderPlate = (height) => {
+            const flexCell = document.createElement("div");
+            flexCell.className = "flex-cell-plates";
+
+            const plateImg = document.createElement("img");
+            plateImg.src="img/plate.png";
+            flexCell.appendChild(plateImg);
+            
+            plateImg.style.height=`${height}%`;
+            document.getElementById("bb-sleeve").before(flexCell);
+        };
+
+        const renderStats = (weight, count, metric) => {
+            const statText = metric ? "kg" : "lb";
+
+            const tableRow = document.createElement("tr");
+            tableRow.className = "weight-stat";
+
+            const tableDataCount = document.createElement("td");
+            tableDataCount.innerText = count;
+            tableDataCount.style.textAlign = "left";
+
+            const tableDataWeight = document.createElement("td");
+            tableDataWeight.innerText = `${weight} ${statText}`;
+
+            tableRow.appendChild(tableDataCount);
+            tableRow.appendChild(tableDataWeight);
+            
+            document.getElementById("list-body").appendChild(tableRow);
+        }
+
+        const removeElementsByClassName = (className) => {
+            const elements = document.getElementsByClassName(className);
+            while(elements.length > 0) {
+                elements[0].parentNode.removeChild(elements[0]);
+            }
+        }
+
+        const setInput = () => {
+            let metric = document.getElementById("metric-input").checked;
+
+            // removes any flex-cell-plates, weight-stats, and sleeve from previous input
+            removeElementsByClassName("flex-cell-plates");
+            removeElementsByClassName("weight-stat");
+            document.getElementById("sleeve")?.remove();
+
+            const counts = {};
+            
+            // renders plates images and weight stats based on calcWeight result array
+            calcWeight(input.value, metric).map((plate, i) => {
+                renderPlate(plate.plateSize);
+                return plate.plateWeight;
+            })
+            // retrieve count for each plate and add to counts object
+            .forEach((i) => {
+                counts[i] = (counts[i] || 0) + 1;
+            });
+
+            // render sleeve
+            renderSleeve();
+
+            // render weight stats based on sorted counts object
+            Object.keys(counts)
+            .sort((a,b) => b - a)
+            .forEach(weight => {
+                renderStats(weight, counts[weight], metric);
+            })
+        }
+        setInput();
+
+        const metricConversion = (metric) => {
+            let tempValue = parseFloat(input.value);
+            if(metric) {
+                tempValue /= 2.205;
+                tempValue -= tempValue % (0.5 * 2);
+            } else {
+                tempValue *= 2.205;
+                tempValue -= tempValue % (1.25 * 2);
+                tempValue += (1.25 * 2);
+            }
+            input.value = tempValue;
+        }
+
+        const validateInput = () => {
+            let tempValue = input.value;
+            const maxLength = input.max.length;
+
+            const hasInvalidChars = new RegExp('[^0-9.]').test(tempValue);
+            const hasDec = tempValue.split(".").length-1;
+            const hasInvalidDec = tempValue.charAt(0) === '.' || tempValue.charAt(maxLength) === '.';
+
+            // remove last entered character if invalid
+            if(
+                (!hasDec && tempValue.length > maxLength) ||     // no decimal & input length greater than max
+                (hasDec && tempValue.length > maxLength+1) ||    // decimal & input length greater than max + decimal
+                (hasDec > 1) ||                                 // more than 1 decimal
+                hasInvalidDec ||                                // decimal at beginning or end of input string
+                hasInvalidChars                                 // character other than # or decimal
+            ) {
+                input.value = tempValue.slice(0, -1);
+            }
+            // set value to max if input string exceeds max
+            else if(tempValue > 1500) {
+                input.value = 1500;
+            }
+        }
+    </script>
+</body>
+</html>
