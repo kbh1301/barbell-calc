@@ -5,7 +5,7 @@ html {
 
 body {
     width: 100%;
-    height: 100%;
+    /* height: 100%; */
     margin: 0;
     text-align: center;
     font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,sans-serif;
@@ -140,7 +140,29 @@ td {
 #metric-input:checked + .input-component #input:focus + label {
     transform: translateY(-24px);
 }
-  
+
+/* step button */
+.step-btn-wrapper {
+    display: flex;
+    flex-direction: column;
+    font-size: 8px;
+}
+.step-btn {
+    border: none;
+    padding: 0 6px;
+    margin-right: 5px;
+    opacity: 0;
+    transition: .25s;
+}
+.step-btn:hover {
+    background: lightgray;
+}
+.step-btn-wrapper:hover .step-btn {
+    opacity: 1;
+}
+form:hover + .step-btn-wrapper .step-btn {
+    opacity: 1;
+}  
 
 /* toggle button styles */
 #metric-input {
