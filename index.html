@@ -44,7 +44,7 @@
                 >
                 <label for="input">Weight</label>
             </form>
-            <div class="step-btn-wrapper">
+            <div class="step-btn-wrapper" onclick="stepInput(event.target.id)">
                 <button id="step-up" class="step-btn">&#9650;</button>
                 <button id="step-down" class="step-btn">&#9660;</button>
             </div>
@@ -56,6 +56,20 @@
 
     <script>
         const input = document.getElementById("input");
+
+        const stepInput = (id) => {
+            let metric = document.getElementById("metric-input").checked;
+            const step = metric ? 1 : 2.5;
+            let tempValue = parseFloat(input.value);
+
+            if(id === "step-up") {
+                tempValue += step;
+            } else if(id === "step-down") {
+                tempValue -= step;
+            }
+            input.value = tempValue;
+            setInput();
+        }
 
         // calculate optimal plates based on user input
         const calcWeight = (input, metric) => {
