@@ -1,5 +1,5 @@
 # Barbell Calculator
-This React component is built as a demo for my portfolio site: https://kbh1301.github.io/profile/Demos#bbcalc
+Originally built as a React component, this vanilla JavaScript demo is built for my portfolio site: https://kbh1301.github.io/profile/Demos#bbcalc
 
 Overview:
 Based on user input, this application will calculate and display the olympic plates needed
